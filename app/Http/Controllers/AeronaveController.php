@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aeronave;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AeronaveController extends Controller
 {
@@ -12,15 +14,12 @@ class AeronaveController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $aeronave = Aeronave::orderBy('matricula', 'DESC')->get();
+        
+        return response()->json([
+            'status' => true,
+            'aeronave' => $aeronave
+        ], 200);
     }
 
     /**
@@ -28,23 +27,35 @@ class AeronaveController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        
+        DB::beginTransaction();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Aeronave $aeronave)
-    {
-        //
-    }
+        try {
+                        
+            $aeronave = Aeronave::create([
+               'matricula' => $request->matricula,
+               'condicao' => $request->condicao,
+               'nivel_combustivel' => $request->nivel_combustivel,
+               'ultima_manutencao' => $request->ultima_manutencao
+            ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Aeronave $aeronave)
-    {
-        //
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'aeronave' => $aeronave,
+                'message' => 'Aeronave cadastrada com sucesso!'
+            ], 201);
+
+        } catch (Exception $e) {
+            
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Aeronave não cadastrada!'
+            ], 400);
+        }
     }
 
     /**
@@ -52,7 +63,33 @@ class AeronaveController extends Controller
      */
     public function update(Request $request, Aeronave $aeronave)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+
+            $aeronave->update([
+                'matricula' => $request->matricula,
+                'condicao' => $request->condicao,
+                'nivel_combustivel' => $request->nivel_combustivel,
+                'ultima_manutencao' => $request->ultima_manutencao
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'aeronave' => $aeronave,
+                'message' => 'Aeronave editada com sucesso!'
+            ], 200);
+            
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Aeronave não editada!'
+            ], 400);
+        }
     }
 
     /**
@@ -60,6 +97,22 @@ class AeronaveController extends Controller
      */
     public function destroy(Aeronave $aeronave)
     {
-        //
+        try {
+            
+            $aeronave->delete();
+
+            return response()->json([
+                'status' => true,
+                'aeronave' => $aeronave,
+                'message' => 'Aeronave apagada com sucesso!'
+            ], 200);
+            
+        } catch (Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Aeronave não apagada!'
+            ], 400);
+        }
     }
 }

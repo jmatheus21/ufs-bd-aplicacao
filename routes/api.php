@@ -13,12 +13,12 @@ Route::delete('/aeronave/{aeronave}', [AeronaveController::class, 'destroy']);
 
 // ROTAS PARA MECANICO
 Route::get('/mecanico', [MecanicoController::class, 'index']);
-Route::get('/mecanico', [MecanicoController::class, 'store']);
-Route::get('/mecanico/{mecanico}', [MecanicoController::class, 'update']);
-Route::get('/mecanico/{mecanico}', [MecanicoController::class, 'destroy']);
+Route::post('/mecanico', [MecanicoController::class, 'store']);
+Route::put('/mecanico/{mecanico}', [MecanicoController::class, 'update']);
+Route::delete('/mecanico/{mecanico}', [MecanicoController::class, 'destroy']);
 
 // ROTAS PARA MANTEM
 Route::get('/mantem', [MantemController::class, 'index']);
-Route::get('/mantem', [MantemController::class, 'store']);
-Route::get('/mantem/{mantem}', [MantemController::class, 'update']);
-Route::get('/mantem/{mantem}', [MantemController::class, 'destroy']);
+Route::post('/mantem', [MantemController::class, 'store']);
+Route::put('/mantem/{mantem}', [MantemController::class, 'update']);
+Route::delete('/mantem/{mantem}', [MantemController::class, 'destroy']);
