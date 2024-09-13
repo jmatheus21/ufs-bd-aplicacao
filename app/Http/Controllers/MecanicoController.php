@@ -76,14 +76,12 @@ class MecanicoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $cpf)
+    public function update(Request $request, Mecanico $mecanico)
     {
 
         DB::beginTransaction();
 
         try{
-
-            $mecanico = Mecanico::where('cpf', $cpf)->firstOrFail();
 
             $mecanico->update([
                 'primeiro_nome' => $request->primeiro_nome,
@@ -127,7 +125,7 @@ class MecanicoController extends Controller
                 'status' => false,
                 'message' => 'Erro ao atualizar os dados do mecânico!',
                 'error' => $e->getMessage()
-            ], 500); 
+            ], 400); 
         }
 
     }
@@ -135,12 +133,10 @@ class MecanicoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($cpf)
+    public function destroy(Mecanico $mecanico)
     {
 
         try{
-
-            $mecanico = Mecanico::where('cpf', $cpf)->firstOrFail();
 
             $mecanico->delete();
 
@@ -162,9 +158,9 @@ class MecanicoController extends Controller
 
             return response()->json([
                 'status' => false,
-                'message' => 'Erro ao atualizar os dados do mecânico!',
+                'message' => 'Mecânico não apagado!',
                 'error' => $e->getMessage()
-            ], 500); 
+            ], 400); 
         }
     }
 }

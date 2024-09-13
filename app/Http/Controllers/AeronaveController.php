@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Aeronave;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -68,7 +69,6 @@ class AeronaveController extends Controller
         try {
 
             $aeronave->update([
-                'matricula' => $request->matricula,
                 'condicao' => $request->condicao,
                 'nivel_combustivel' => $request->nivel_combustivel,
                 'ultima_manutencao' => $request->ultima_manutencao
@@ -82,12 +82,22 @@ class AeronaveController extends Controller
                 'message' => 'Aeronave editada com sucesso!'
             ], 200);
             
+        } catch (ModelNotFoundException $e){
+            
+            DB::rollBack();
+
+            return response()->json([
+            'status' => false,
+            'message' => 'Aeronave não foi encontrada!'
+            ], 404);
+        
         } catch (Exception $e) {
             DB::rollBack();
 
             return response()->json([
                 'status' => false,
-                'message' => 'Aeronave não editada!'
+                'message' => 'Aeronave não editada!',
+                'error' => $e->getMessage()
             ], 400);
         }
     }
@@ -98,7 +108,7 @@ class AeronaveController extends Controller
     public function destroy(Aeronave $aeronave)
     {
         try {
-            
+
             $aeronave->delete();
 
             return response()->json([
@@ -107,11 +117,19 @@ class AeronaveController extends Controller
                 'message' => 'Aeronave apagada com sucesso!'
             ], 200);
             
+        } catch (ModelNotFoundException $e){
+            
+            return response()->json([
+            'status' => false,
+            'message' => 'Aeronave não foi encontrada!'
+            ], 404);
+            
         } catch (Exception $e) {
 
             return response()->json([
                 'status' => false,
-                'message' => 'Aeronave não apagada!'
+                'message' => 'Aeronave não apagada!',
+                'error' => $e->getMessage()
             ], 400);
         }
     }
