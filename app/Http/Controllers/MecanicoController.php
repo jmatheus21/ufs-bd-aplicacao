@@ -67,7 +67,7 @@ class MecanicoController extends Controller
 
             return response()->json([
                 'status' => false,
-                'message' => 'Mecanico não cadastrado!'
+                'message' => 'Mecânico não cadastrado!'
             ], 400);
         }
     }
@@ -117,7 +117,7 @@ class MecanicoController extends Controller
 
                 return response()->json([
                 'status' => false,
-                'message' => 'Mecanico não foi encontrado!'
+                'message' => 'Mecânico não foi encontrado!'
                 ], 404);
         } catch (Exception $e){
 
@@ -147,14 +147,14 @@ class MecanicoController extends Controller
             return response()->json([
                 'status' => true,
                 'mecanico' => $mecanico,
-                'message' => 'Mecanico deletado com sucesso!'
+                'message' => 'Mecânico deletado com sucesso!'
             ], 200);
         
         } catch (ModelNotFoundException $e){
             
             return response()->json([
             'status' => false,
-            'message' => 'Mecanico não foi encontrado!'
+            'message' => 'Mecânico não foi encontrado!'
             ], 404);
         } catch (Exception $e){
 
