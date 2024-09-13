@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('escolaridade', 30);
             $table->date('data_nascimento');
             $table->double('salario');
-            $table->string('cargo', 45);
             $table->date('admissao');
             $table->date('validade');
             $table->char('sexo', 1);
