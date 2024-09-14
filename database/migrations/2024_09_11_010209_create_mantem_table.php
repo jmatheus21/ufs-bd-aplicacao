@@ -14,11 +14,9 @@ return new class extends Migration
         Schema::create('mantem', function (Blueprint $table) {
             $table->unsignedBigInteger('mecanico_cpf');
             $table->string('aeronave_matricula', 10);
-            $table->dateTime('horario');
+            $table->dateTime('horario')->unique();
             $table->string('detalhes', 50);
             $table->timestamps();
-
-            $table->primary(['mecanico_cpf', 'aeronave_matricula']);
 
             $table->foreign('aeronave_matricula')->references('matricula')->on('aeronave')->onDelete('cascade');
             $table->foreign('mecanico_cpf')->references('cpf')->on('mecanico')->onDelete('cascade');
