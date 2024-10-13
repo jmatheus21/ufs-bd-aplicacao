@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('mantem', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('mecanico_cpf');
             $table->string('aeronave_matricula', 10);
             $table->dateTime('horario')->unique();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Aeronave;
 use App\Models\Mantem;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -65,6 +66,60 @@ class MantemController extends Controller
                 'message' => 'Manutenção não cadastrada!',
                 'error' => $e->getMessage()
             ], 400);
+        }
+    }
+
+    public function transacao (Request $request, Mantem $manutencao)
+    {
+        $validatedData = $request->validate([
+            'mecanico_cpf' => 'required|exists:mecanico,cpf',
+            'aeronave_matricula' => 'required|exists:aeronave,matricula',
+            'horario' => 'required|date',
+            'detalhes' => 'required|string|max:50',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Busca a aeronave pela matrícula
+            $aeronave = Aeronave::where('matricula', $validatedData['aeronave_matricula'])->first();
+
+            // Verifica a condição da aeronave
+            if (in_array($aeronave->condicao, ['disponivel', 'degradado'])) {
+                
+                $aeronave->condicao = 'manutencao'; // Atualiza a condição para "manutencao"
+                $aeronave->save();
+
+                // Cria uma nova entrada de manutenção
+                $manutencao = Mantem::create([
+                    'mecanico_cpf' => $validatedData['mecanico_cpf'],
+                    'aeronave_matricula' => $validatedData['aeronave_matricula'],
+                    'horario' => $validatedData['horario'],
+                    'detalhes' => $validatedData['detalhes']
+                 ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'status' => true,
+                    'manutencao' => $manutencao,
+                    'message' => 'Manutenção registrada com sucesso e aeronave atualizada para manutenção'
+                ], 200);
+            } else {
+                // Caso a aeronave não esteja disponível ou degradada
+                DB::rollBack();  // Faz rollback se a condição não permitir manutenção
+                return response()->json([
+                    'status' => false,
+                    'error' => 'A aeronave não está disponível para manutenção',
+                ], 400);
+            }
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Erro ao cadastrar manutenção',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 

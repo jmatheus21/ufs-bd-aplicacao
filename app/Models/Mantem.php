@@ -9,10 +9,6 @@ class Mantem extends Model
 {
     protected $table = 'mantem';
 
-    public $incrementing = false;
-
-    protected $primaryKey = 'horario';
-
     protected $fillable = [
         'mecanico_cpf',
         'aeronave_matricula',
