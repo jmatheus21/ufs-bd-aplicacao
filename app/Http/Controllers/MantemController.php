@@ -16,7 +16,7 @@ class MantemController extends Controller
      */
     public function index()
     {
-        $manutencao = Mantem::orderBy('horario', 'DESC')->get();
+        $manutencao = Mantem::orderBy('id', 'DESC')->get();
         
         return response()->json([
             'status' => true,
