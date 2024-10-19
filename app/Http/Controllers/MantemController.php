@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\Type\Integer;
 
 class MantemController extends Controller
 {
@@ -17,7 +18,17 @@ class MantemController extends Controller
     public function index()
     {
         $manutencao = Mantem::orderBy('id', 'DESC')->get();
-        
+
+        return response()->json([
+            'status' => true,
+            'manutencao' => $manutencao
+        ], 200);
+    }
+
+    public function show($id)
+    {
+        $manutencao = Mantem::find($id);
+
         return response()->json([
             'status' => true,
             'manutencao' => $manutencao
@@ -29,65 +40,27 @@ class MantemController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         DB::beginTransaction();
 
         try {
 
             // Validar dados
-            $request->validate([
+            $validatedData = $request->validate([
                 'mecanico_cpf' => 'required|exists:mecanico,cpf', // Verifica se existe o mecanico com esse CPF
                 'aeronave_matricula' => 'required|exists:aeronave,matricula', // Verifica se existe a aeronave com essa matrícula
                 'horario' => 'required|date',
                 'detalhes' => 'required|string|max:50',
             ]);
-                        
-            $manutencao = Mantem::create([
-               'mecanico_cpf' => $request->mecanico_cpf,
-               'aeronave_matricula' => $request->aeronave_matricula,
-               'horario' => $request->horario,
-               'detalhes' => $request->detalhes
-            ]);
 
-            DB::commit();
-
-            return response()->json([
-                'status' => true,
-                'manutencao' => $manutencao,
-                'message' => 'Manutenção cadastrada com sucesso!'
-            ], 201);
-
-        } catch (Exception $e) {
-            
-            DB::rollBack();
-
-            return response()->json([
-                'status' => false,
-                'message' => 'Manutenção não cadastrada!',
-                'error' => $e->getMessage()
-            ], 400);
-        }
-    }
-
-    public function transacao (Request $request, Mantem $manutencao)
-    {
-        $validatedData = $request->validate([
-            'mecanico_cpf' => 'required|exists:mecanico,cpf',
-            'aeronave_matricula' => 'required|exists:aeronave,matricula',
-            'horario' => 'required|date',
-            'detalhes' => 'required|string|max:50',
-        ]);
-
-        DB::beginTransaction();
-
-        try {
             // Busca a aeronave pela matrícula
             $aeronave = Aeronave::where('matricula', $validatedData['aeronave_matricula'])->first();
 
             // Verifica a condição da aeronave
             if (in_array($aeronave->condicao, ['disponivel', 'degradado'])) {
-                
+
                 $aeronave->condicao = 'manutencao'; // Atualiza a condição para "manutencao"
+                $aeronave->ultima_manutencao = $validatedData['horario'];
                 $aeronave->save();
 
                 // Cria uma nova entrada de manutenção
@@ -95,8 +68,9 @@ class MantemController extends Controller
                     'mecanico_cpf' => $validatedData['mecanico_cpf'],
                     'aeronave_matricula' => $validatedData['aeronave_matricula'],
                     'horario' => $validatedData['horario'],
+                    'status' => 'em andamento',
                     'detalhes' => $validatedData['detalhes']
-                 ]);
+                ]);
 
                 DB::commit();
 
@@ -126,26 +100,38 @@ class MantemController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Mantem $manutencao)
+    public function update(Request $request, $id)
     {
         DB::beginTransaction();
 
         try {
+            $manutencao = Mantem::find($id);
 
-            // Validar dados
-            $request->validate([
-                'mecanico_cpf' => 'required|exists:mecanico,cpf', // Verifica se existe o mecanico com esse CPF
-                'aeronave_matricula' => 'required|exists:aeronave,matricula', // Verifica se existe a aeronave com essa matrícula
-                'horario' => 'required|date',
-                'detalhes' => 'required|string|max:50',
+            if (!$manutencao) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Manutenção não foi encontrada!'
+                ], 404);
+            }
+
+            $validatedData = $request->validate([
+                'mecanico_cpf' => 'sometimes|exists:mecanico,cpf',
+                'aeronave_matricula' => 'sometimes|exists:aeronave,matricula',
+                'horario' => 'sometimes|date',
+                'status' => 'sometimes|string|max:15',
+                'detalhes' => 'sometimes|string|max:50',
             ]);
 
-            $manutencao->update([
-                'mecanico_cpf' => $request->mecanico_cpf,
-                'aeronave_matricula' => $request->aeronave_matricula,
-                'horario' => $request->horario,
-                'detalhes' => $request->detalhes
-            ]);
+            $manutencao->update($validatedData);
+
+            // Atualiza a condição da aeronave se o status for 'finalizado'
+            if ($request->has('status') && $request->status == 'finalizado') {
+                $aeronave = Aeronave::where('matricula', $manutencao['aeronave_matricula'])->first();
+                if ($aeronave) {
+                    $aeronave->condicao = 'disponivel';
+                    $aeronave->save();
+                }
+            }
 
             DB::commit();
 
@@ -154,20 +140,13 @@ class MantemController extends Controller
                 'manutencao' => $manutencao,
                 'message' => 'Manutenção editada com sucesso!'
             ], 200);
-            
-        } catch (ModelNotFoundException $e){
-            
-            return response()->json([
-            'status' => false,
-            'message' => 'Manutenção não foi encontrada!'
-            ], 404);
-            
         } catch (Exception $e) {
             DB::rollBack();
 
             return response()->json([
                 'status' => false,
-                'message' => 'Manutenção não editada!'
+                'message' => 'Manutenção não editada!',
+                'error' => $e->getMessage() // Opicional, para depuração
             ], 400);
         }
     }
@@ -175,25 +154,25 @@ class MantemController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Mantem $manutencao)
+    public function destroy($id)
     {
+        $manutencao = Mantem::find($id);
+
         try {
 
             $manutencao->delete();
 
             return response()->json([
                 'status' => true,
-                'aeronave' => $manutencao,
+                'manutencao' => $manutencao,
                 'message' => 'Manutenção apagada com sucesso!'
             ], 200);
-            
-        } catch (ModelNotFoundException $e){
-            
+        } catch (ModelNotFoundException $e) {
+
             return response()->json([
-            'status' => false,
-            'message' => 'Manutenção não foi encontrada!'
+                'status' => false,
+                'message' => 'Manutenção não foi encontrada!'
             ], 404);
-            
         } catch (Exception $e) {
 
             return response()->json([

@@ -19,6 +19,7 @@ Route::delete('/mecanico/{mecanico}', [MecanicoController::class, 'destroy']);
 
 // ROTAS PARA MANTEM
 Route::get('/mantem', [MantemController::class, 'index']);
+Route::get('/mantem/{mantem}', [MantemController::class, 'show']);
 Route::post('/mantem', [MantemController::class, 'store']);
 Route::put('/mantem/{mantem}', [MantemController::class, 'update']);
 Route::delete('/mantem/{mantem}', [MantemController::class, 'destroy']);

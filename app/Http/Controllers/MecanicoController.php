@@ -82,25 +82,30 @@ class MecanicoController extends Controller
         DB::beginTransaction();
 
         try{
-
-            $mecanico->update([
-                'primeiro_nome' => $request->primeiro_nome,
-                'sobrenome' => $request->sobrenome,
-                'email' => $request->email,
-                'telefone' => $request->telefone,
-                'escolaridade' => $request->escolaridade,
-                'data_nascimento' => $request->data_nascimento,
-                'salario' => $request->salario,
-                'cargo' => $request->cargo,
-                'admissao' => $request->admissao,
-                'validade' => $request->validade,
-                'sexo' => $request->sexo,
-                'endereco' => $request->endereco,
-                'estado_civil' => $request->estado_civil,
-                'raca' => $request->raca,
-                'licencas' => $request->licencas,
-                'habilidades' => $request->habilidades 
+            // Validação dos campos opcionais que você deseja permitir na atualização
+            $data = $request->only([
+                'primeiro_nome',
+                'sobrenome',
+                'email',
+                'telefone',
+                'escolaridade',
+                'data_nascimento',
+                'salario',
+                'cargo',
+                'admissao',
+                'validade',
+                'sexo',
+                'endereco',
+                'estado_civil',
+                'raca',
+                'licencas',
+                'habilidades'
             ]);
+
+            // Verifica se há algum campo para atualizar
+            if (!empty($data)) {
+                $mecanico->update($data);
+            }
 
             DB::commit();
 

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('mecanico_cpf');
             $table->string('aeronave_matricula', 10);
             $table->dateTime('horario');
+            $table->string('status', 15);
             $table->string('detalhes', 50);
             $table->timestamps();
 

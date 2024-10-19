@@ -9,10 +9,13 @@ class Mantem extends Model
 {
     protected $table = 'mantem';
 
+    protected $primaryKey = 'id';
+
     protected $fillable = [
         'mecanico_cpf',
         'aeronave_matricula',
         'horario',
+        'status',
         'detalhes'
     ];
 

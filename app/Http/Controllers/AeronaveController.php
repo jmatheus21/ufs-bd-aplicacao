@@ -68,11 +68,17 @@ class AeronaveController extends Controller
 
         try {
 
-            $aeronave->update([
-                'condicao' => $request->condicao,
-                'nivel_combustivel' => $request->nivel_combustivel,
-                'ultima_manutencao' => $request->ultima_manutencao
+            // Validação dos campos opcionais que você deseja permitir na atualização
+            $data = $request->only([
+                'condicao',
+                'nivel_combustivel',
+                'ultima_manutencao'
             ]);
+
+            // Verifica se há algum campo para atualizar
+            if (!empty($data)) {
+                $aeronave->update($data);
+            }
 
             DB::commit();
 
